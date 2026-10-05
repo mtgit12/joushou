@@ -1,0 +1,37 @@
+# =====================================================================
+# Caddy（architecture.md 3.2）
+#
+#   {$SITE_ADDRESS} : 利用者向け。HTTPS を終端して Next.js へ中継する
+#   :8080           : Laravel API 向け。Docker の内部ネットワークからのみ使う
+#
+# SITE_ADDRESS を指定しない場合は localhost になり、Caddy の内部 CA の証明書で
+# HTTPS になる。ブラウザの警告を消す手順は infra/docker/README.md を参照。
+# =====================================================================
+
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	# セキュリティヘッダー。
+	# HSTS と CSP は本番の設定と合わせて docs/security.md で決めてから追加する
+	# （localhost に HSTS を付けると、ほかのローカル開発にも影響するため）
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	reverse_proxy web:3000
+}
+
+# Laravel は API 専用で静的ファイルを配信しないため、すべてのリクエストを
+# index.php に渡す。パスは api コンテナ内のものを指す
+:8080 {
+	root * /var/www/html/public
+	rewrite * /index.php
+	reverse_proxy api:9000 {
+		transport fastcgi {
+			split .php
+		}
+	}
+}

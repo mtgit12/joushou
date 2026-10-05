@@ -66,6 +66,7 @@
 | Laravel Pint、Larastan | PHP の整形、静的解析 | Biome は PHP を扱えないため、バックエンドの「最低限のコード品質」を担保する |
 | Intervention Image | 画像の Exif 削除、リサイズ | NFR-05 の「位置情報などの Exif 削除」のため |
 | Sentry SDK | エラー監視 | NFR-11 のため（8章） |
+| Mailpit | ローカル開発での SES の代わり | 送信したメールを Web UI で確認できる。ローカル環境でのみ使う（9.1） |
 
 ### 2.3 注意点
 
@@ -349,7 +350,7 @@ Auth0 の標準のメール送信機能はテスト用途向けのため、本�
 
 | 環境 | 構成 | 用途 |
 |---|---|---|
-| ローカル | Docker Compose（本番と同じ構成。S3・SES は開発用の代替を使う） | 開発、テスト |
+| ローカル | Docker Compose（本番と同じ構成。S3 の代わりに Laravel のローカルディスク、SES の代わりに Mailpit を使う） | 開発、テスト |
 | ローカル（モック接続） | Next.js のみ起動し、Laravel の代わりに Apidog のモックへ接続する | Laravel の完成前のフロントエンド開発（9.4） |
 | 本番 | Lightsail | 公開環境 |
 
@@ -428,6 +429,8 @@ Apidog のテスト機能や CLI は、第一フェーズでは使いません�
 project-root/
 ├── README.md
 ├── CHANGELOG.md
+├── compose.yaml                   # ローカル開発環境の Docker Compose 定義
+├── .env.example                   # ローカル開発用の環境変数のひな形（値の入った .env はコミットしない）
 ├── .github/
 │   └── workflows/                 # GitHub Actions（CI、デプロイ）
 ├── apps/
@@ -442,17 +445,19 @@ project-root/
 │   │   │   └── lib/
 │   │   │       ├── api/           # Laravel API クライアント（OpenAPI から型生成）
 │   │   │       └── auth/          # Auth0 の設定
-│   │   ├── e2e/                   # Playwright の E2E テスト（Vitest のテストは対象ファイルの隣に置く）
-│   │   └── Dockerfile
+│   │   └── e2e/                   # Playwright の E2E テスト（Vitest のテストは対象ファイルの隣に置く）
 │   └── api/                       # Laravel（DDD）
 │       ├── app/                   # Laravel 標準（Providers など、フレームワーク寄りのもの）
 │       ├── src/                   # ドメインごとのコード（下記 10.1）
 │       ├── database/              # マイグレーション、シーダー
 │       ├── routes/
-│       ├── tests/
-│       └── Dockerfile
+│       └── tests/
 ├── infra/
-│   ├── docker/                    # Docker Compose、Caddyfile、MySQL の設定
+│   ├── docker/                    # Dockerfile と Compose から参照する設定
+│   │   ├── web/                   # Next.js の Dockerfile（build context は apps/web）
+│   │   ├── api/                   # Laravel の Dockerfile（build context は apps/api）
+│   │   ├── caddy/                 # Caddyfile
+│   │   └── mysql/                 # MySQL の設定、初期化スクリプト
 │   ├── terraform/                 # AWS リソース
 │   └── scripts/                   # デプロイ、バックアップのスクリプト
 └── docs/                          # 仕様・設計ドキュメント

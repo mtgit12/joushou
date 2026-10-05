@@ -1,0 +1,165 @@
+# =====================================================================
+# ローカル開発環境（architecture.md 3章・9.1）
+#
+#   caddy     : HTTPS 終端（https://localhost → web）、Laravel への FastCGI 中継（:8080）
+#   web       : Next.js 開発サーバー（画面 + BFF）
+#   api       : Laravel API（PHP-FPM）
+#   worker    : Laravel キューワーカー
+#   scheduler : Laravel スケジューラ
+#   db        : MySQL 8.4
+#   mailpit   : SES の代わりのメール受信（http://localhost:8025）
+#
+# 使い方（リポジトリのルートで実行）:
+#   cp .env.example .env              # 初回のみ。パスワードを設定する
+#   docker compose up -d --build      # 起動
+#   docker compose up -d --build -V   # 依存パッケージを変えたとき（node_modules / vendor を作り直す）
+#   docker compose down -v            # ボリュームごと破棄
+#
+# 本番（Lightsail）用の定義は、デプロイの設計（docs/ops/deployment.md）で別に作る。
+# =====================================================================
+
+name: ${COMPOSE_PROJECT_NAME:-joushou}
+
+# api / worker / scheduler で共通の設定
+x-laravel: &laravel
+  build:
+    context: ./apps/api
+    dockerfile: ../../infra/docker/api/Dockerfile
+    target: dev
+    args:
+      PHP_VERSION: ${PHP_VERSION:-8.4}
+  image: ${COMPOSE_PROJECT_NAME:-joushou}-api-dev
+  environment:
+    TZ: ${TZ:-Asia/Tokyo}
+    APP_ENV: local
+    DB_CONNECTION: mysql
+    DB_HOST: db
+    DB_PORT: "3306"
+    DB_DATABASE: ${MYSQL_DATABASE:-joushou}
+    DB_USERNAME: ${MYSQL_USER:-joushou}
+    DB_PASSWORD: ${MYSQL_PASSWORD:?.env に MYSQL_PASSWORD を設定してください}
+    QUEUE_CONNECTION: database
+    # S3 の代わりにローカルディスク（storage/app）に保存する
+    FILESYSTEM_DISK: local
+    # SES の代わりに Mailpit へ送る
+    MAIL_MAILER: smtp
+    MAIL_HOST: mailpit
+    MAIL_PORT: "1025"
+  volumes:
+    - ./apps/api:/var/www/html
+    # 匿名ボリューム。ホスト側のソースで上書きされないように保護する
+    - /var/www/html/vendor
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  # -------------------------------------------------------------------
+  # Caddy
+  # -------------------------------------------------------------------
+  caddy:
+    image: caddy:${CADDY_VERSION:-2}-alpine
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+      # Laravel API。本番では公開しないが、ローカルでは確認用にホストからのみ叩けるようにする
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    volumes:
+      - ./infra/docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # ローカル用の証明書（Caddy の内部 CA）を保持する
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------
+  # Next.js（開発）
+  # -------------------------------------------------------------------
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infra/docker/web/Dockerfile
+      target: dev
+      args:
+        NODE_VERSION: ${NODE_VERSION:-24}
+        BUN_VERSION: ${BUN_VERSION:-1}
+    image: ${COMPOSE_PROJECT_NAME:-joushou}-web-dev
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+      # BFF から Laravel を呼ぶ URL。Caddy の内部向けポートを指す。
+      # Laravel の API の実装前は、.env で Apidog のモックの URL に切り替える
+      API_BASE_URL: ${API_BASE_URL:-http://caddy:8080}
+    volumes:
+      # ソースをバインドマウントして HMR を効かせる
+      - ./apps/web:/app
+      # 以下 2 つは匿名ボリューム。ホスト側のソースで上書きされないように保護する
+      - /app/node_modules
+      - /app/.next
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------
+  # Laravel
+  # -------------------------------------------------------------------
+  api:
+    <<: *laravel
+
+  worker:
+    <<: *laravel
+    command: ["php", "artisan", "queue:work", "--tries=3"]
+
+  scheduler:
+    <<: *laravel
+    command: ["php", "artisan", "schedule:work"]
+
+  # -------------------------------------------------------------------
+  # MySQL
+  # -------------------------------------------------------------------
+  db:
+    image: mysql:${MYSQL_VERSION:-8.4}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?.env に MYSQL_ROOT_PASSWORD を設定してください}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-joushou}
+      MYSQL_USER: ${MYSQL_USER:-joushou}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?.env に MYSQL_PASSWORD を設定してください}
+      TZ: ${TZ:-Asia/Tokyo}
+    ports:
+      # DB クライアントから接続するため、ホストからのみ接続できるようにする
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./infra/docker/mysql/conf.d:/etc/mysql/conf.d:ro
+      # 初回起動時のみ、この中の .sql / .sh が実行される
+      - ./infra/docker/mysql/initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------
+  # Mailpit（SES の代わり）
+  # -------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:${MAILPIT_VERSION:-latest}
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+    ports:
+      # 受信したメールを見る Web UI
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
