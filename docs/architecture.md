@@ -18,7 +18,7 @@
 | 前提 | 出典 | 設計への影響 |
 |---|---|---|
 | 月額1,000円以内が目標、3,000円が上限 | 憲章 7.3、NFR-10 | サーバーは1台に集約し、マネージドサービスは無料枠の範囲で使う |
-| 学習が最優先（Next.js フルスタック、Laravel DDD、Auth0、AWS、テスト自動化） | 憲章 4.1、8.1 | 学習目標の技術を省略しない構成にする |
+| 学習が最優先（Next.js フルスタック、Laravel DDD、Better Auth、AWS、テスト自動化） | 憲章 4.1、8.1 | 学習目標の技術を省略しない構成にする |
 | セキュリティと個人情報の保護は必ず守る | 憲章 8.1、NFR-05 | トークンをブラウザに置かない。API を外部に公開しない |
 | 一人で無理なく運用し続ける | 憲章 8.2 | 構成要素を増やしすぎない。デプロイとバックアップは自動化する |
 | 規模は初年度で会員数百人、城200件、武将100人程度 | NFR-09 | 1台構成で十分。検索エンジンやキャッシュサーバーは入れない |
@@ -38,10 +38,11 @@
 | Lint・Formatter | Biome | フロントエンドの TypeScript／CSS に適用する |
 | フォーム・バリデーション | react-hook-form、zod | zod のスキーマはフォームとサーバー側（Server Actions）の両方で使う |
 | 状態管理 | zustand | 地図の表示状態など、クライアント側の UI 状態に限定して使う。サーバーのデータは持たない |
+| UI コンポーネント | shadcn/ui | コードをプロジェクトに取り込む方式のため、見た目（DESIGN.md のトークン）とアクセシビリティの調整を自分で行える。`components/ui/` に置く（10章） |
 | 地図 | mapcn | MapLibre GL ベースの地図コンポーネント。背景地図は地理院タイル（5章） |
 | バックエンド | Laravel（DDD） | Web API。外部には公開せず、Next.js からのみ呼ばれる |
 | データベース | MySQL | |
-| 認証 | Auth0 | 認証（本人確認）のみを任せる。認可（権限）は Laravel で管理する（6章） |
+| 認証 | Better Auth | Next.js に組み込み、認証（本人確認）とセッション管理を担う。認可（権限）は Laravel で管理する（6章） |
 | コンテナ | Docker、Docker Compose | ローカルと本番で同じ構成を使う |
 | インフラ | AWS | Lightsail を中心に、S3・CloudFront・SES・Route 53 を使う |
 
@@ -51,22 +52,22 @@
 
 | 技術 | 用途 | 採用理由 |
 |---|---|---|
-| Tailwind CSS、shadcn/ui | スタイリング、UI コンポーネント | mapcn が前提としているため。shadcn/ui はコードをプロジェクトに取り込む方式なので、アクセシビリティの調整も自分で行える |
+| Tailwind CSS | スタイリング | shadcn/ui と mapcn が前提としているため |
 | MapLibre GL JS | 地図描画エンジン | mapcn が内部で使用する。ピンのクラスタリング（AC-01-3）にも使う |
 | Caddy | リバースプロキシ、HTTPS | 証明書の取得と更新が自動で、設定が短い。Nginx＋Certbot より運用の手間が少ない |
 | Terraform | AWS リソースのコード管理（IaC） | インフラの学習目標に合い、構成をリポジトリで公開・再現できる |
-| @auth0/nextjs-auth0 | Next.js でのログイン・セッション管理 | Auth0 公式 SDK。セッションを暗号化 Cookie で管理し、トークンをブラウザに渡さない |
-| JWT 検証ライブラリ（PHP） | Laravel でのアクセストークン検証 | Auth0 の JWKS で署名を検証するため。具体的なライブラリは実装時に選び、ADR に残す |
+| mysql2 | Better Auth から MySQL への接続 | Better Auth が MySQL を使うときの接続ドライバー（7.1） |
+| JWT 検証ライブラリ（PHP） | Laravel でのアクセストークン検証 | Better Auth（JWT プラグイン）が公開する JWKS で署名を検証するため。Better Auth の署名方式の初期値は EdDSA のため、対応するライブラリを実装時に選び、ADR に残す |
 | openapi-typescript | OpenAPI から TypeScript の型を生成 | `docs/api/openapi.yaml` と実装の型を一致させるため（SDD の原則） |
 | Node.js | Next.js の本番サーバー、Playwright の実行環境 | 2.3 を参照 |
 | Vitest、React Testing Library、jsdom | フロントエンドの Unit テスト | Next.js の公式ドキュメントに導入手順があり、React コンポーネントのテストの情報が豊富。`bun test` で同等のことをするには追加の設定が必要で、つまずいたときに調べる手間が大きい |
 | Playwright | E2E テスト | NFR-12 の E2E テストのため。Chrome・Safari（WebKit）の両方で動かせる。Node.js 上で実行する |
 | Apidog | API 仕様の編集、モックサーバー | フロントエンドを先に開発するため、Laravel の完成前に API の代わりとなるモックが必要。OpenAPI と Git リポジトリを同期できる（9.4） |
-| PHPUnit（または Pest） | Laravel の Unit テスト | Laravel 標準。どちらにするかは `conventions.md` で決める |
+| Pest | Laravel の Unit テスト、Feature テスト、アーキテクチャテスト | Laravel の新規プロジェクトで選べる標準のテストフレームワーク。アーキテクチャテスト（`arch()`）でレイヤーの依存の向きを自動で検査できる（`conventions/PHP-Laravel.md`） |
 | Laravel Pint、Larastan | PHP の整形、静的解析 | Biome は PHP を扱えないため、バックエンドの「最低限のコード品質」を担保する |
 | Intervention Image | 画像の Exif 削除、リサイズ | NFR-05 の「位置情報などの Exif 削除」のため |
 | Sentry SDK | エラー監視 | NFR-11 のため（8章） |
-| Mailpit | ローカル開発での SES の代わり | 送信したメールを Web UI で確認できる。ローカル環境でのみ使う（9.1） |
+| Linear | タスク管理 | GitHub 連携でブランチ・PR と Issue を自動で紐づけられ、見積もりと実績の記録にも使える。開発の管理ツールでありアプリケーションには組み込まない（`conventions/branch-commit.md`） |
 
 ### 2.3 注意点
 
@@ -83,7 +84,7 @@
 | クライアントコンポーネント（フォームなど） | Vitest＋React Testing Library |
 | 非同期の Server Components | Vitest では扱いにくいため、Playwright の E2E で確認する |
 | 地図（MapLibre） | jsdom では WebGL が動かないため、Playwright の E2E で確認する |
-| Laravel のドメイン層 | PHPUnit（または Pest）。必須（憲章 8.5） |
+| Laravel のドメイン層 | Pest。必須（憲章 8.5） |
 | 主要なユーザーの流れ | Playwright（NFR-12） |
 
 ---
@@ -112,7 +113,7 @@ flowchart LR
         R53["Route 53<br/>DNS"]
     end
 
-    Auth0["Auth0"]
+    Google["Google<br/>（OAuth）"]
     GSI["地理院タイル"]
     Sentry["Sentry"]
 
@@ -127,10 +128,11 @@ flowchart LR
     CF --> S3Img
     User -->|画像の取得| CF
     User -->|地図タイルの取得| GSI
-    User <-->|ログイン| Auth0
-    Web <-->|トークン取得| Auth0
-    Api -->|署名鍵の取得| Auth0
-    Auth0 -->|確認メール等| SES
+    Web -->|認証・セッション| DB
+    Web -->|確認メール等| SES
+    User <-->|Google でログイン| Google
+    Web <-->|トークン取得| Google
+    Api -->|署名鍵の取得（JWKS）| Web
     Web --> Sentry
     Api --> Sentry
 ```
@@ -140,17 +142,17 @@ flowchart LR
 | 構成要素 | 配置 | 役割 |
 |---|---|---|
 | Caddy | Lightsail（コンテナ） | HTTPS の終端、Next.js へのリバースプロキシ、セキュリティヘッダーの付与 |
-| Next.js | Lightsail（コンテナ） | 画面の描画、BFF（Laravel への中継とアクセストークンの付与）、Auth0 のセッション管理 |
+| Next.js | Lightsail（コンテナ） | 画面の描画、BFF（Laravel への中継とアクセストークンの付与）、認証とセッション管理（Better Auth） |
 | Laravel API | Lightsail（コンテナ） | ドメインロジック、認可、データの読み書き。**インターネットには公開しない** |
 | キューワーカー | Lightsail（コンテナ） | メール送信、通知の作成など時間のかかる処理。Laravel と同じイメージで起動する |
 | スケジューラ | Lightsail（コンテナ） | DB バックアップなどの定期処理。Laravel と同じイメージで起動する |
-| MySQL | Lightsail（コンテナ） | データベース。データはホスト側のボリュームに保存する |
+| MySQL | Lightsail（コンテナ） | データベース。Laravel 用と Better Auth 用のデータベースを分けて置く（7.1）。データはホスト側のボリュームに保存する |
 | S3（画像） | AWS | 城・武将の画像、会員の写真を保存する |
 | CloudFront | AWS | S3 の画像を配信する。S3 への直接アクセスは禁止する（OAC を使用） |
 | S3（バックアップ） | AWS | DB のダンプを保存する |
-| SES | AWS | 通知メール、Auth0 の確認メール・パスワード再設定メールの送信 |
+| SES | AWS | 通知メール（Laravel）、確認メール・パスワード再設定メール（Better Auth）の送信 |
 | Route 53 | AWS | ドメインの DNS 管理 |
-| Auth0 | 外部 SaaS | 会員登録、ログイン、Google ログイン、パスワード再設定 |
+| Google（OAuth） | 外部サービス | Google アカウントでの会員登録・ログイン。Google Cloud で OAuth クライアントを作成する |
 | 地理院タイル | 国土地理院 | 背景地図。ブラウザから直接取得する |
 | Sentry | 外部 SaaS | フロントエンド・バックエンドのエラー監視 |
 
@@ -189,7 +191,7 @@ flowchart LR
 |---|---|---|
 | 城・武将の一覧と詳細、公開プロフィールの表示 | Server Components | 認証なしで呼ぶ。結果は Next.js のデータキャッシュに載せる |
 | 地図のピンデータ（全城） | Server Components で取得し、地図コンポーネントに渡す | 認証なし。200件程度なので一括で取得する |
-| 訪問記録の登録、情報提供など会員の操作 | Server Actions | セッションからアクセストークンを取り出し、Authorization ヘッダーに付ける |
+| 訪問記録の登録、情報提供など会員の操作 | Server Actions | セッションをもとに Better Auth で短時間だけ有効なアクセストークン（JWT）を発行し、Authorization ヘッダーに付ける |
 | 管理画面の操作 | Server Actions | 同上。権限チェックは Laravel が行う |
 | ファイルのアップロード（写真、CSV） | Route Handlers | 同上。Next.js はファイルを中継するだけ |
 
@@ -257,45 +259,60 @@ flowchart LR
 
 | 責務 | 担当 | 内容 |
 |---|---|---|
-| 認証（本人確認） | Auth0 | メールアドレス＋パスワード、Google ログイン、メールアドレス確認、パスワード再設定 |
-| セッション管理 | Next.js（@auth0/nextjs-auth0） | 暗号化した httpOnly Cookie でセッションを保持し、アクセストークンはサーバー側で扱う |
-| トークン検証 | Laravel | Auth0 の公開鍵（JWKS）で JWT の署名・発行者・対象（audience）・有効期限を検証する |
-| 認可（権限） | Laravel | ロール（会員、管理者、特権管理者）は Laravel の DB で管理する。Auth0 のユーザー ID（`sub`）と会員を紐づける |
+| 認証（本人確認） | Next.js（Better Auth） | メールアドレス＋パスワード、Google ログイン、メールアドレス確認、パスワード再設定。ログイン・会員登録などの画面も自前で実装する（`screens.md` 2.5） |
+| セッション管理 | Next.js（Better Auth） | セッションは Better Auth 用のデータベースに保存し、ブラウザには署名付きの httpOnly Cookie だけを渡す |
+| アクセストークンの発行 | Next.js（Better Auth の JWT プラグイン） | Laravel を呼ぶたびに、セッションをもとに短時間だけ有効な JWT をサーバー側で発行する。JWT をブラウザへ返す機能は使わない |
+| トークン検証 | Laravel | Next.js が公開する JWKS（`/api/auth/jwks`）の公開鍵で、JWT の署名・発行者・対象（audience）・有効期限を検証する。JWKS は内部ネットワーク経由で取得し、キャッシュする |
+| 認可（権限） | Laravel | ロール（会員、管理者、特権管理者）は Laravel の DB で管理する。Better Auth のユーザー ID（JWT の `sub`）と会員を紐づける |
 
-ロールを Auth0 ではなく Laravel で管理する理由は、権限が業務ルール（ドメイン）の一部であり、DDD の考え方に沿ってドメイン層で扱いたいためです。Auth0 には認証だけを任せることで、将来ほかの認証サービスに移る場合の影響も小さくなります。
+ロールを Better Auth ではなく Laravel で管理する理由は、権限が業務ルール（ドメイン）の一部であり、DDD の考え方に沿ってドメイン層で扱いたいためです。Better Auth には認証だけを任せ、Laravel とは JWT だけでつなぐことで、将来ほかの認証の仕組みに移る場合の影響も小さくなります。
 
-### 6.2 ログインの流れ
+### 6.2 Better Auth を選んだ理由
+
+| 候補 | 評価 |
+|---|---|
+| **Better Auth（採用）** | Next.js に組み込むオープンソースのライブラリ。会員の認証情報を自分のデータベースに置けるため、外部サービスの料金プランや利用者数の上限に縛られない。ログイン画面を自前で作るため、DESIGN.md のとおりの見た目にできる。認証の仕組みを自分で組み立てるため、学習目標（憲章 4.1）にも合う |
+| Auth0 | ログイン画面、メール送信、攻撃への対策まで任せられ、実装の手間は最小。一方で、ログイン画面の見た目は無料プランで変えられる範囲に限られ、会員の認証情報が外部サービスに置かれる |
+
+自前で持つことになる責任（パスワードの保管、ログイン試行の回数制限、メール送信）は、Better Auth の標準機能で満たし、独自の実装はしません。
+
+### 6.3 ログインの流れ
 
 ```mermaid
 sequenceDiagram
     actor U as 利用者
-    participant W as Next.js
-    participant A as Auth0
+    participant W as Next.js（Better Auth）
+    participant G as Google
     participant L as Laravel API
 
-    U->>W: ログインボタン
-    W->>A: 認可リクエスト（Authorization Code Flow）
-    U->>A: メール＋パスワード または Google でログイン
-    A->>W: 認可コード
-    W->>A: トークン取得
-    A->>W: ID トークン、アクセストークン
+    U->>W: ログイン画面でメール＋パスワードを送信
+    W->>W: パスワードを照合、セッションを作成
+    Note over U,G: Google でログインする場合
+    U->>W: Google でログイン
+    W->>G: 認可リクエスト（Authorization Code Flow）
+    U->>G: Google アカウントでログイン
+    G->>W: 認可コード
+    W->>G: トークン取得、プロフィール取得
+    W->>W: セッションを作成
     W->>U: セッション Cookie（httpOnly）を発行
     U->>W: 会員の操作（Server Action）
-    W->>L: Authorization: Bearer アクセストークン
+    W->>W: セッションを確認し、JWT を発行
+    W->>L: Authorization: Bearer JWT
     L->>L: JWT 検証、会員の特定、権限チェック
     L->>W: 結果
     W->>U: 画面を更新
 ```
 
-### 6.3 Auth0 と連動させる処理
+### 6.4 Better Auth と連動させる処理
 
 | 処理 | 要件 | 方法 |
 |---|---|---|
-| 退会時のアカウント削除 | AC-10-4 | Laravel から Auth0 Management API でユーザーを削除する |
-| 利用停止中のログイン禁止 | AC-24-2 | Laravel で利用停止にしたうえで、Auth0 Management API でユーザーをブロックする |
-| メールアドレス未確認の会員の制限 | AC-07-2 | アクセストークンに確認済みかどうかを含め、Laravel 側で会員機能を拒否する |
+| 退会時のアカウント削除 | AC-10-4 | Laravel で会員のデータを削除したあと、Next.js から Better Auth のユーザー（認証情報、セッション、Google との連携情報）を削除する |
+| 利用停止中のログイン禁止 | AC-24-2 | Laravel で利用停止にしたうえで、Next.js から Better Auth でその会員のセッションをすべて無効にし、新しいログインも拒否する。拒否の方法は `docs/design/auth.md` で決める。Laravel は利用停止中の会員からのリクエストをすべて拒否する |
+| メールアドレス未確認の会員の制限 | AC-07-2 | Better Auth の設定で、確認が済むまでログインさせない。あわせて JWT に確認済みかどうかを含め、Laravel 側でも会員機能を拒否する |
+| 確認メール・パスワード再設定メールの送信 | AC-07-2、AC-08-2 | Better Auth はメールを送る処理を持たないため、Next.js から SES で送る（ローカルでは開発用の代替） |
 
-Auth0 の標準のメール送信機能はテスト用途向けのため、本番では SES を Auth0 のメール送信先として設定します。
+途中で失敗した場合（例：Laravel では退会したが Better Auth の削除に失敗した）の扱いは、`docs/design/auth.md` で定めます。
 
 ---
 
@@ -306,9 +323,10 @@ Auth0 の標準のメール送信機能はテスト用途向けのため、本�
 | 項目 | 方針 |
 |---|---|
 | 配置 | Lightsail 上の MySQL コンテナ。データはホストのボリュームに保存する |
+| データベースの分け方 | 同じ MySQL の中に、Laravel 用と Better Auth 用（ユーザー、セッション、外部アカウントの連携、確認用トークン）のデータベースを分けて置く。テーブルの持ち主を分け、それぞれの接続ユーザーには自分のデータベースへの権限だけを与える |
 | 文字コード | utf8mb4 |
 | 日本語検索 | 第一フェーズは件数が少ない（城200件、武将100人程度）ため、名称・読み仮名・別名への部分一致検索とする。件数が増えて遅くなったら、全文検索（ngram）を検討する |
-| マイグレーション | Laravel のマイグレーションで管理する。`docs/design/data-model.md` と乖離させない |
+| マイグレーション | Laravel 用は Laravel のマイグレーション、Better Auth 用は Better Auth の CLI で管理する。`docs/design/data-model.md` と乖離させない |
 
 ### 7.2 画像
 
@@ -324,7 +342,7 @@ Auth0 の標準のメール送信機能はテスト用途向けのため、本�
 
 | 対象 | 方法 | 保持期間 |
 |---|---|---|
-| データベース | スケジューラで毎日 `mysqldump` を実行し、S3（バックアップ用）に保存する | 7日（S3 のライフサイクルルールで自動削除） |
+| データベース | スケジューラで毎日 `mysqldump` を実行し、S3（バックアップ用）に保存する。Laravel 用と Better Auth 用の両方を対象にする | 7日（S3 のライフサイクルルールで自動削除） |
 | 画像 | S3 のバージョニングを有効にし、削除・上書き前の版を残す | 7日（古い版はライフサイクルルールで自動削除） |
 
 第一フェーズの公開前に、バックアップから別環境へ実際に復元できることを確認します（NFR-04）。手順は `docs/ops/runbook.md` に記載します。
@@ -350,7 +368,7 @@ Auth0 の標準のメール送信機能はテスト用途向けのため、本�
 
 | 環境 | 構成 | 用途 |
 |---|---|---|
-| ローカル | Docker Compose（本番と同じ構成。S3 の代わりに Laravel のローカルディスク、SES の代わりに Mailpit を使う） | 開発、テスト |
+| ローカル | Docker Compose（本番と同じ構成。S3・SES は開発用の代替を使う） | 開発、テスト |
 | ローカル（モック接続） | Next.js のみ起動し、Laravel の代わりに Apidog のモックへ接続する | Laravel の完成前のフロントエンド開発（9.4） |
 | 本番 | Lightsail | 公開環境 |
 
@@ -381,7 +399,7 @@ flowchart LR
 | 秘密情報 | 保存場所 |
 |---|---|
 | デプロイ用の SSH 鍵、GHCR の認証情報 | GitHub Actions の Secrets |
-| アプリケーションの設定（DB パスワード、Auth0 の鍵、AWS のアクセスキーなど） | AWS Systems Manager Parameter Store（標準パラメータ）を正とし、デプロイ時にサーバーの `.env` に書き出す（権限 600） |
+| アプリケーションの設定（DB パスワード、Better Auth の秘密鍵、Google の OAuth クライアントシークレット、AWS のアクセスキーなど） | AWS Systems Manager Parameter Store（標準パラメータ）を正とし、デプロイ時にサーバーの `.env` に書き出す（権限 600） |
 | Terraform の状態ファイル | S3（非公開、暗号化、バージョニング有効） |
 
 Lightsail のインスタンスには IAM ロールを付けられないため、S3・SES を使うための IAM ユーザーを用途別に作り、必要最小限の権限だけを与えます。リポジトリには `.env.example`（値は空）だけを置きます（憲章 8.6）。
@@ -415,9 +433,9 @@ flowchart LR
 | Apidog からの同期は main ではなく作業ブランチに push し、プルリクエストと CI を通してからマージする。main はブランチ保護で直接 push を禁止する | 仕様の変更もレビューと CI を通すため |
 | 接続先は環境変数（例：`API_BASE_URL`）で Apidog のモックと Laravel を切り替える | BFF 方式では Laravel を呼ぶのは Next.js のサーバー側のみなので、設定1つで切り替えられる |
 | Apidog の環境設定に、本物のトークンやパスワードを保存しない | Apidog のデータは外部のクラウドに保存されるため |
-| モックでは認証（JWT の検証）や権限チェックを確認しない | モックは検証を行わないため。Auth0 と組み合わせた確認は Laravel の完成後に行う |
+| モックでは認証（JWT の検証）や権限チェックを確認しない | モックは検証を行わないため。Better Auth と組み合わせた確認は Laravel の完成後に行う |
 
-Apidog のテスト機能や CLI は、第一フェーズでは使いません（API のテストは PHPUnit と Playwright で行う）。必要になったら追加を検討します。
+Apidog のテスト機能や CLI は、第一フェーズでは使いません（API のテストは Pest と Playwright で行う）。必要になったら追加を検討します。
 
 ---
 
@@ -444,11 +462,10 @@ project-root/
 │   │   │   ├── components/ui/     # shadcn/ui、mapcn のコンポーネント
 │   │   │   └── lib/
 │   │   │       ├── api/           # Laravel API クライアント（OpenAPI から型生成）
-│   │   │       └── auth/          # Auth0 の設定
+│   │   │       └── auth/          # Better Auth の設定（サーバー・クライアント）
 │   │   └── e2e/                   # Playwright の E2E テスト（Vitest のテストは対象ファイルの隣に置く）
 │   └── api/                       # Laravel（DDD）
-│       ├── app/                   # Laravel 標準（Providers など、フレームワーク寄りのもの）
-│       ├── src/                   # ドメインごとのコード（下記 10.1）
+│       ├── app/                   # Laravel 標準の構成に Domain・Application・Infrastructure・Queries を加える（下記 10.1）
 │       ├── database/              # マイグレーション、シーダー
 │       ├── routes/
 │       └── tests/
@@ -467,24 +484,20 @@ project-root/
 
 ### 10.1 Laravel のレイヤー構成（DDD）
 
-`apps/api/src/` の下を、業務のまとまり（境界づけられたコンテキスト）ごとに分け、それぞれを4つの層に分けます。
+Laravel の機能を活かした DDD とします。`apps/api/app/` の Laravel 標準の構成（`Http`、`Models`、`Policies`、`Events` など）をそのまま使い、DDD のために `Domain`、`Application`、`Infrastructure`、`Queries` を加えます。名前空間は Laravel 標準の `App\` のまま（例：`App\Domain\Castle\Castle`）とし、`php artisan make:*` でどの層のクラスも作れるようにします。各層の下は、集約（城、武将、会員、訪問記録、情報提供、通知など）ごとにディレクトリを分けます。
 
-| コンテキスト（案） | 扱う内容 |
-|---|---|
-| Catalog | 城、武将、ゆかり、マスタデータ |
-| Member | 会員、プロフィール、推し武将、ロール |
-| Visit | 訪問記録 |
-| Contribution | 情報提供、審査 |
-| Notification | システム内通知、メール通知、お知らせ |
+トランザクション、権限（Gate と Policy）、イベントとキュー、ファイル保存（Filesystem）、メール送信（Notification）などは Laravel の機能をそのまま使い、同じ役割の仕組みやサービスクラスを自前で作りません。Laravel に依存させないのはドメイン層だけとし、業務ルールはフレームワークから切り離してテストできるようにします。
 
-| 層 | 責務 | 依存してよい先 |
-|---|---|---|
-| Domain | エンティティ、値オブジェクト、ドメインサービス、リポジトリのインターフェース | なし（Laravel にも依存しない） |
-| Application | ユースケース（例：訪問記録を登録する）。トランザクションの境界 | Domain |
-| Infrastructure | リポジトリの実装（Eloquent）、S3・SES・Auth0 との連携 | Domain、Application |
-| Presentation | コントローラー、リクエストの検証、レスポンスの整形 | Application |
+初版では、層の上に境界づけられたコンテキスト（Catalog、Member など）を置く案でしたが、第一フェーズの規模（`requirements.md` NFR-09）では分ける効果より手間が大きいため、採用しません。規模が大きくなった場合や、第二フェーズで Go に切り出す機能が決まった場合に、あらためて検討します。
 
-コンテキストの分け方と命名の細かいルールは、`conventions.md` で確定します。
+| 層 | 主なディレクトリ | 責務 | 依存してよい先 |
+|---|---|---|---|
+| Domain | `Domain/` | エンティティ、値オブジェクト、ドメインサービス、リポジトリのインターフェース、ロールごとの権限の判定 | なし（Laravel にも依存しない） |
+| Application | `Application/`、`Queries/`、`Policies/`、`Events/` | ユースケース（トランザクションの境界、権限の確認）、参照用のクエリ、Policy、イベント | Domain、Laravel |
+| Infrastructure | `Infrastructure/`、`Models/`、`Listeners/`、`Notifications/`、`Jobs/` | リポジトリの実装（Eloquent）、通知・メールなどの後続処理。外部との接続は Laravel の機能と設定で行う | Domain、Application、Laravel |
+| Presentation | `Http/` | リソースコントローラー、FormRequest、API Resource、アクセストークン（JWT）を検証する認証ガード | Application、Domain、Laravel |
+
+ディレクトリ構成、命名、依存の向きの検査方法は、`conventions/PHP-Laravel.md` で定めます。
 
 ---
 
@@ -501,7 +514,7 @@ project-root/
 | CloudFront | 0円 | 無料枠の範囲を想定 |
 | SES | 数円 | 通知メールの件数による |
 | Parameter Store（標準） | 0円 | |
-| Auth0、Sentry、Apidog、GHCR、GitHub Actions | 0円 | 無料プランの範囲。GitHub Actions は公開リポジトリのため無料 |
+| Better Auth、Google（OAuth）、Sentry、Apidog、GHCR、GitHub Actions | 0円 | Better Auth はオープンソースのライブラリのため費用はかからない。ほかは無料プランの範囲。GitHub Actions は公開リポジトリのため無料 |
 | **合計** | **約2,100円** | |
 
 目標の1,000円は超えますが、上限の3,000円には収まります。目標を超える主な理由は、安定性を優先して Lightsail を2GB プランにしたことです（3.3）。費用を下げる必要が出た場合は、1GB プランへの変更（メモリ設定の見直しが前提）を検討します。
@@ -529,11 +542,12 @@ project-root/
 | `0002-bff-architecture.md` | Next.js を BFF とし、Laravel API を外部に公開しない |
 | `0003-lightsail-single-instance.md` | 第一フェーズは Lightsail 1台（2GB）に集約する |
 | `0004-map-tiles-gsi.md` | 背景地図に地理院タイルを使う |
-| `0005-authorization-in-laravel.md` | 認証は Auth0、認可は Laravel で管理する |
+| `0005-authorization-in-laravel.md` | 認証は Better Auth（Next.js）、認可は Laravel で管理する |
 | `0006-terraform.md` | AWS リソースを Terraform で管理する |
 | `0007-bun-and-node.md` | パッケージ管理は Bun、本番の実行は Node.js とする |
 | `0008-vitest.md` | フロントエンドの Unit テストに Vitest を使う |
 | `0009-apidog-mock.md` | API 仕様の編集とモックに Apidog を使い、`openapi.yaml` を正とする |
+| `0010-better-auth.md` | 認証に Auth0 ではなく Better Auth を使う |
 
 ---
 
