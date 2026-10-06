@@ -423,7 +423,7 @@ Infrastructure 層には、`XxxService` のような外部連携のラッパー�
 
 | 対象 | ルール | 例 |
 |---|---|---|
-| テーブル名 | snake_case の複数形 | `castles`、`visit_records` |
+| テーブル名 | snake_case の複数形 | `castles`、`visits` |
 | 中間テーブル | 2つのテーブルの単数形を、アルファベット順に `_` でつなぐ | `castle_warlord` |
 | カラム名 | snake_case | `visited_on`、`is_public` |
 | 外部キー | `<参照先の単数形>_id` | `castle_id` |

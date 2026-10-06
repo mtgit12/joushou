@@ -57,10 +57,10 @@
 
 ```ts
 // 良い例：ユニオン型
-type CastleCategory = "top100" | "next100" | "other";
+type CastleCategory = "top100" | "zoku100" | "other";
 
 // 悪い例：enum
-enum CastleCategory { Top100, Next100, Other }
+enum CastleCategory { Top100, Zoku100, Other }
 ```
 
 ---
@@ -71,7 +71,7 @@ enum CastleCategory { Top100, Next100, Other }
 
 | 対象 | 形式 | 例 |
 |---|---|---|
-| ディレクトリ | kebab-case | `features/castle-map/`、`features/visit-record/` |
+| ディレクトリ | kebab-case | `features/castle-map/`、`features/visit/` |
 | コンポーネントのファイル | PascalCase | `CastleCard.tsx` |
 | コンポーネント | PascalCase | `CastleCard` |
 | Props の型 | コンポーネント名＋`Props` | `CastleCardProps` |
@@ -81,16 +81,16 @@ enum CastleCategory { Top100, Next100, Other }
 | 関数・変数 | camelCase | `fetchCastles`、`visitedCount` |
 | 真偽値 | `is`、`has`、`can` で始める | `isVisited`、`hasError`、`canEdit` |
 | 定数（モジュールのトップレベルで固定の値） | UPPER_SNAKE_CASE | `MAX_UPLOAD_SIZE` |
-| 型 | PascalCase | `Castle`、`VisitRecord` |
-| zod スキーマ | camelCase＋`Schema` | `visitRecordSchema` |
-| zod から作る型 | PascalCase＋`Input` | `VisitRecordInput` |
+| 型 | PascalCase | `Castle`、`Visit` |
+| zod スキーマ | camelCase＋`Schema` | `visitSchema` |
+| zod から作る型 | PascalCase＋`Input` | `VisitInput` |
 | Server Actions | 動詞で始まる camelCase＋`Action` | `registerVisitAction` |
 | イベントハンドラ（内部の関数） | `handle`＋イベント | `handleSubmit`、`handlePinClick` |
 | イベントハンドラ（Props） | `on`＋イベント | `onSubmit`、`onPinClick` |
 | zustand のストア | `use`＋名前＋`Store` | `useMapStore`（ファイルは `mapStore.ts`） |
 | Unit テスト | 対象のファイル名＋`.test` | `CastleCard.test.tsx`、`formatDate.test.ts` |
 | E2E テスト | kebab-case＋`.spec.ts` | `e2e/castle-search.spec.ts` |
-| URL のパス | kebab-case | `/castles`、`/my-page`（`design/screens.md` に従う） |
+| URL のパス | kebab-case | `/castles`、`/mypage`（`design/screens.md` に従う） |
 
 ### 4.2 例外：`components/ui/`
 
@@ -126,7 +126,7 @@ apps/web/src/
 ├── features/                 # 機能単位のコード
 │   ├── castle-map/
 │   ├── castle-list/
-│   └── visit-record/
+│   └── visit/
 ├── components/
 │   ├── ui/                   # shadcn/ui、mapcn（4.2）
 │   └── layout/               # ヘッダー、フッターなど、全画面で使う部品
@@ -142,10 +142,10 @@ apps/web/src/
 必要なものだけを作ります。
 
 ```
-features/visit-record/
+features/visit/
 ├── components/
-│   ├── VisitRecordForm.tsx
-│   └── VisitRecordForm.test.tsx
+│   ├── VisitForm.tsx
+│   └── VisitForm.test.tsx
 ├── hooks/
 │   └── useVisitDraft.ts
 ├── actions.ts               # Server Actions
@@ -158,7 +158,7 @@ features/visit-record/
 
 | ルール | 理由 |
 |---|---|
-| `src/` 配下は `@/` から始まるパスで import する（例：`@/features/visit-record/actions`） | ファイルを移動しても import が壊れにくい |
+| `src/` 配下は `@/` から始まるパスで import する（例：`@/features/visit/actions`） | ファイルを移動しても import が壊れにくい |
 | `features/` 同士で直接 import しない。複数の機能で使うものは `components/` や `lib/` に移す | 機能間の依存が絡み合うのを防ぐ |
 | `index.ts` でまとめて export する（バレルファイル）は作らない | 循環参照と、不要なコードがクライアントに含まれることを防ぐ |
 | `lib/api/` と `lib/auth/server.ts` の先頭に `import "server-only";` を書く。ログイン画面などで使う `lib/auth/client.ts` には秘密情報を扱う処理を置かない | Laravel の URL、Better Auth の秘密鍵、トークンを扱うコードが、誤ってクライアントに含まれるのを防ぐ |
@@ -287,14 +287,14 @@ export type ActionResult<T = void> =
 - 送信中はボタンを押せない状態にし、送信中であることを表示する（二重送信の防止）。
 
 ```ts
-// features/visit-record/schemas.ts
-export const visitRecordSchema = z.object({
+// features/visit/schemas.ts
+export const visitSchema = z.object({
   castleId: z.string().min(1),
   visitedOn: z.string().date("訪問日を正しい形式で入力してください"),
   memo: z.string().max(500, "メモは500文字以内で入力してください").optional(),
 });
 
-export type VisitRecordInput = z.infer<typeof visitRecordSchema>;
+export type VisitInput = z.infer<typeof visitSchema>;
 ```
 
 ---
@@ -382,7 +382,7 @@ WCAG 2.2 レベル AA を目標とします（NFR-07）。詳しい基準は `DE
 - スナップショットテストは使わない（変更のたびに更新するだけになりやすいため）。
 
 ```tsx
-describe("VisitRecordForm", () => {
+describe("VisitForm", () => {
   it("訪問日を入力せずに送信すると、エラーメッセージを表示する", async () => {
     // ...
   });
