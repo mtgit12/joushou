@@ -16,7 +16,7 @@
 | 項目 | 決定内容 | 理由 |
 |---|---|---|
 | ブランチ戦略 | GitHub Flow（`master`＋作業ブランチ） | 一人開発で、master へのマージで本番に自動デプロイする（`architecture.md` 9.2）。リリース用のブランチを持つ必要がない |
-| タスク管理 | Linear（チームキー `TAK`） | 作業はすべて Linear の Issue から始める。`tasks.md` は作らない|
+| タスク管理 | Linear（チームキー `TAK`） | 作業はすべて Linear の Issue から始める。|
 | マージ方法 | Merge commit | PR 内の作業の経過を履歴に残し、学習の記録とするため |
 | コミットメッセージ | Conventional Commits（type は英語、説明は日本語） | 変更の種類を機械的に判別でき、説明は自分が最も正確に書ける言語で書くため |
 
