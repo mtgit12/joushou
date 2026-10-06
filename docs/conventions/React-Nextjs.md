@@ -17,7 +17,6 @@
 - **Biome と TypeScript の型チェックが通らないコードはマージしない**。本書のルールのうち、ツールで検査できるものはツールに任せる。
 - **サーバー側でできることはサーバー側でする**。コンポーネントは Server Component を基本とし、ブラウザでしか動かせない部分だけをクライアントコンポーネントにする。
 - **Laravel API はブラウザから呼ばない**。Laravel を呼ぶのは Next.js のサーバー側（Server Components、Server Actions、Route Handlers）だけとする（`architecture.md` 4章、BFF 方式）。
-- **型の正は `docs/api/openapi.yaml`**。API のリクエスト・レスポンスの型は手で書かず、openapi-typescript で生成したものを使う。
 
 ---
 
@@ -28,7 +27,6 @@
 | パッケージ管理 | Bun | `bun install`、`bun add <パッケージ>` |
 | Lint・整形 | Biome | `bun run lint`、`bun run format` |
 | 型チェック | TypeScript | `bun run typecheck`（`tsc --noEmit`） |
-| API の型生成 | openapi-typescript | `bun run gen:api` |
 | Unit テスト | Vitest、React Testing Library | `bun run test` |
 | E2E テスト | Playwright（Node.js 上で実行） | `bun run test:e2e` |
 
@@ -52,7 +50,6 @@
 | `enum` | 使わない。文字列のユニオン型か `as const` を使う |
 | 非 null アサーション（`!`） | 使わない。値がないケースを分岐で処理する |
 | 型アサーション（`as`） | 最小限にする。使う場合は、なぜ安全かをコメントで書く |
-| API の型 | `src/lib/api/` に生成した型を使う。生成ファイルは手で編集しない |
 | フォームの型 | zod のスキーマから `z.infer` で作る。スキーマと型を別々に書かない |
 
 ```ts
@@ -131,7 +128,7 @@ apps/web/src/
 │   ├── ui/                   # shadcn/ui、mapcn（4.2）
 │   └── layout/               # ヘッダー、フッターなど、全画面で使う部品
 ├── lib/
-│   ├── api/                  # Laravel API クライアントと生成した型
+│   ├── api/                  # Laravel API クライアント
 │   ├── auth/                 # Better Auth の設定。server.ts（サーバー用）と client.ts（ブラウザ用）に分ける
 │   └── utils/                # 機能に依存しない関数
 └── stores/                   # zustand のストア（複数の機能で使うもの）
@@ -419,7 +416,6 @@ AI が書いたコードは、マージ前に次を確認します。
 
 - [ ] 不要な `"use client"` が付いていない。
 - [ ] ブラウザから Laravel を直接呼んでいない。`NEXT_PUBLIC_API_...` のような変数を作っていない。
-- [ ] API の型を手で書いていない（生成した型を使っている）。
 - [ ] `any`、`enum`、非 null アサーションを使っていない。
 - [ ] 本書にない新しいパッケージを追加していない。
 - [ ] 自分でコードの動きを説明できる。

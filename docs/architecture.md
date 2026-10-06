@@ -58,7 +58,6 @@
 | Terraform | AWS リソースのコード管理（IaC） | インフラの学習目標に合い、構成をリポジトリで公開・再現できる |
 | mysql2 | Better Auth から MySQL への接続 | Better Auth が MySQL を使うときの接続ドライバー（7.1） |
 | JWT 検証ライブラリ（PHP） | Laravel でのアクセストークン検証 | Better Auth（JWT プラグイン）が公開する JWKS で署名を検証するため。Better Auth の署名方式の初期値は EdDSA のため、対応するライブラリを実装時に選び、ADR に残す |
-| openapi-typescript | OpenAPI から TypeScript の型を生成 | `docs/api/openapi.yaml` と実装の型を一致させるため（SDD の原則） |
 | Node.js | Next.js の本番サーバー、Playwright の実行環境 | 2.3 を参照 |
 | Vitest、React Testing Library、jsdom | フロントエンドの Unit テスト | Next.js の公式ドキュメントに導入手順があり、React コンポーネントのテストの情報が豊富。`bun test` で同等のことをするには追加の設定が必要で、つまずいたときに調べる手間が大きい |
 | Playwright | E2E テスト | NFR-12 の E2E テストのため。Chrome・Safari（WebKit）の両方で動かせる。Node.js 上で実行する |
@@ -414,9 +413,7 @@ Lightsail のインスタンスには IAM ロールを付けられないため�
 flowchart LR
     Spec["機能仕様<br/>docs/specs/"] --> OAS["API 仕様<br/>docs/api/openapi.yaml"]
     OAS --> Mock["Apidog の<br/>モック"]
-    OAS --> Types["型生成<br/>openapi-typescript"]
     Mock --> Front["フロントエンド実装"]
-    Types --> Front
     OAS --> Back["Laravel 実装"]
     Back --> Switch["接続先を Laravel に切り替え"]
     Front --> Switch
@@ -428,7 +425,7 @@ flowchart LR
 
 | ルール | 理由 |
 |---|---|
-| リポジトリの `docs/api/openapi.yaml` を正とする | 型生成、Laravel の実装、テストの基準を1か所にするため |
+| リポジトリの `docs/api/openapi.yaml` を正とする | Laravel の実装、テストの基準を1か所にするため |
 | Apidog は Spec-First Mode で OpenAPI ファイルをリポジトリと双方向に同期する | Apidog とリポジトリの二重管理を防ぐため |
 | Apidog からの同期は main ではなく作業ブランチに push し、プルリクエストと CI を通してからマージする。main はブランチ保護で直接 push を禁止する | 仕様の変更もレビューと CI を通すため |
 | 接続先は環境変数（例：`API_BASE_URL`）で Apidog のモックと Laravel を切り替える | BFF 方式では Laravel を呼ぶのは Next.js のサーバー側のみなので、設定1つで切り替えられる |
@@ -461,7 +458,7 @@ project-root/
 │   │   │   ├── features/          # 機能単位のコンポーネント・Server Actions
 │   │   │   ├── components/ui/     # shadcn/ui、mapcn のコンポーネント
 │   │   │   └── lib/
-│   │   │       ├── api/           # Laravel API クライアント（OpenAPI から型生成）
+│   │   │       ├── api/           # Laravel API クライアント
 │   │   │       └── auth/          # Better Auth の設定（サーバー・クライアント）
 │   │   └── e2e/                   # Playwright の E2E テスト（Vitest のテストは対象ファイルの隣に置く）
 │   └── api/                       # Laravel（DDD）

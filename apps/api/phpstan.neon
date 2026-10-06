@@ -1,0 +1,8 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+    # レベルの上げ方は docs/conventions/PHP-Laravel.md 2.1 に従う
+    level: 5
