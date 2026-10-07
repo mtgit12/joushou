@@ -404,8 +404,28 @@ shadcn/ui の CSS 変数には、次のようにトークンを割り当てま�
 | `--input` | `outline` |
 | `--ring` | `focus-ring` |
 | `--radius` | `rounded.md`（8px） |
+| `--card-foreground`、`--popover-foreground` | `on-surface` |
+| `--destructive-foreground` | `on-error` |
+| `--sidebar`／`--sidebar-foreground` | `surface`／`on-surface`（管理画面の左メニュー） |
+| `--sidebar-primary`／`--sidebar-primary-foreground` | `primary`／`on-primary` |
+| `--sidebar-accent`／`--sidebar-accent-foreground` | `surface-variant`／`on-surface` |
+| `--sidebar-border`／`--sidebar-ring` | `outline-variant`／`focus-ring` |
 
 shadcn/ui の `accent` は「ホバー時の背景」の意味で使われるため、本書の `tertiary`（茜）とは対応させません。
+
+shadcn/ui に対応する変数がないトークンは、次の CSS 変数として追加し、Tailwind のクラス（`bg-tertiary`、`text-success` など）で使えるようにします。名前は shadcn/ui に合わせ、`on-*` は `*-foreground` とします。
+
+| CSS 変数 | トークン |
+|---|---|
+| `--primary-hover` | `primary-hover` |
+| `--tertiary`／`--tertiary-foreground`／`--tertiary-hover` | `tertiary`／`on-tertiary`／`tertiary-hover` |
+| `--tertiary-container`／`--tertiary-container-foreground` | `tertiary-container`／`on-tertiary-container` |
+| `--inverse`／`--inverse-foreground` | `inverse-surface`／`inverse-on-surface` |
+| `--error-container`／`--error-container-foreground` | `error-container`／`on-error-container` |
+| `--success`／`--success-container`／`--success-container-foreground` | `success`／`success-container`／`on-success-container` |
+| `--warning-container`／`--warning-container-foreground` | `warning-container`／`on-warning-container` |
+| `--scrim` | `scrim` |
+| `--pin-top100`／`--pin-zoku100`／`--pin-cluster`／`--pin-stroke` | `pin-top100`／`pin-zoku100`／`pin-cluster`／`pin-stroke` |
 
 ### ダークモードへの備え
 

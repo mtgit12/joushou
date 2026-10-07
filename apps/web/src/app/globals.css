@@ -27,6 +27,27 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
+  --color-tertiary-hover: var(--tertiary-hover);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-tertiary-container-foreground: var(--tertiary-container-foreground);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
+  --color-error-container: var(--error-container);
+  --color-error-container-foreground: var(--error-container-foreground);
+  --color-success: var(--success);
+  --color-success-container: var(--success-container);
+  --color-success-container-foreground: var(--success-container-foreground);
+  --color-warning-container: var(--warning-container);
+  --color-warning-container-foreground: var(--warning-container-foreground);
+  --color-scrim: var(--scrim);
+  --color-pin-top100: var(--pin-top100);
+  --color-pin-zoku100: var(--pin-zoku100);
+  --color-pin-cluster: var(--pin-cluster);
+  --color-pin-stroke: var(--pin-stroke);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -48,73 +69,63 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* 色は DESIGN.md のトークンの値。対応表は DESIGN.md の「shadcn/ui との対応」を参照 */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #f5f6f7; /* background */
+  --foreground: #23262b; /* on-surface */
+  --card: #ffffff; /* surface */
+  --card-foreground: #23262b; /* on-surface */
+  --popover: #ffffff; /* surface */
+  --popover-foreground: #23262b; /* on-surface */
+  --primary: #223a70; /* primary */
+  --primary-foreground: #ffffff; /* on-primary */
+  --secondary: #e9edf5; /* primary-container */
+  --secondary-foreground: #223a70; /* on-primary-container */
+  --muted: #edeff2; /* surface-variant */
+  --muted-foreground: #5b6068; /* on-surface-variant */
+  --accent: #edeff2; /* surface-variant */
+  --accent-foreground: #23262b; /* on-surface */
+  --destructive: #b3261e; /* error */
+  --destructive-foreground: #ffffff; /* on-error */
+  --border: #dadde2; /* outline-variant */
+  --input: #7a808a; /* outline */
+  --ring: #223a70; /* focus-ring */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --radius: 0.5rem; /* rounded.md（8px） */
+  --sidebar: #ffffff; /* surface */
+  --sidebar-foreground: #23262b; /* on-surface */
+  --sidebar-primary: #223a70; /* primary */
+  --sidebar-primary-foreground: #ffffff; /* on-primary */
+  --sidebar-accent: #edeff2; /* surface-variant */
+  --sidebar-accent-foreground: #23262b; /* on-surface */
+  --sidebar-border: #dadde2; /* outline-variant */
+  --sidebar-ring: #223a70; /* focus-ring */
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* shadcn/ui に対応する変数がないトークン */
+  --primary-hover: #1a2d57;
+  --tertiary: #b7282e;
+  --tertiary-foreground: #ffffff;
+  --tertiary-hover: #9a1f25;
+  --tertiary-container: #fbeaea;
+  --tertiary-container-foreground: #9a1f25;
+  --inverse: #23262b;
+  --inverse-foreground: #ffffff;
+  --error-container: #fce8e6;
+  --error-container-foreground: #8c1d18;
+  --success: #1e6b3a;
+  --success-container: #e4f2e8;
+  --success-container-foreground: #17552e;
+  --warning-container: #fdf1d6;
+  --warning-container-foreground: #7a5200;
+  --scrim: rgba(35, 38, 43, 0.5);
+  --pin-top100: #b7282e;
+  --pin-zoku100: #223a70;
+  --pin-cluster: #23262b;
+  --pin-stroke: #ffffff;
 }
 
 @layer base {
